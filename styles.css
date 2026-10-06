@@ -39,3 +39,7 @@ body { margin:0; padding:0; font-family:system-ui,sans-serif; }
 
 #em-demo .em-nav button{gap:5px;min-height:60px;line-height:1.2}
 #em-demo .em-nav svg{width:21px;height:21px;stroke:currentColor;stroke-width:1.65;fill:none;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+
+#em-demo .em-red-flags{padding-left:21px;font-size:14px;line-height:1.55}#em-demo .em-red-flags li{margin:7px 0}
+#em-demo .em-support{margin-top:18px;padding-top:18px;border-top:1px solid var(--em-line)}#em-demo .em-support-link{display:inline-block;margin-top:8px;color:var(--em-accent);font-size:14px}
+#em-demo .em-portion-buttons{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}#em-demo .em-portion-buttons button{padding:8px 3px;font-size:15px}#em-demo .em-portion-buttons small{display:block;font-size:10px;color:var(--em-muted)}#em-demo .em-portion-buttons button[aria-pressed=true]{background:var(--em-soft);border-color:var(--em-accent)}

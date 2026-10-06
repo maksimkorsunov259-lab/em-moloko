@@ -1,5 +1,6 @@
 import {imapSteps} from './recipes.js';
 export const APP='em-moloko',SCHEMA=1,KEY='em-moloko.diary.v1';
+export const pieceFractions=[8,7,6,5,4,3,2,1].map(denominator=>({label:denominator===1?'1':`1/${denominator}`,amount:Number((1/denominator).toFixed(6)),approximate:[7,6,3].includes(denominator)}));
 export const clone=x=>JSON.parse(JSON.stringify(x));
 export const localDate=(d=new Date())=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 export const emptyDaily=()=>({date:localDate(),well:false,asthma:false,changes:false,prepared:false});
