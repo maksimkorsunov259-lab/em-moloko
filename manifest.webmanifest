@@ -1,5 +1,5 @@
 {
- "id":"./", "name":"ЕмМолоко", "short_name":"ЕмМолоко", "lang":"ru",
+ "id":"/em-moloko/", "name":"ЕмМолоко", "short_name":"ЕмМолоко", "lang":"ru",
  "description":"Дневник молочной лестницы iMAP для родителей",
  "start_url":"./", "scope":"./", "display":"standalone",
  "background_color":"#fbf7f0", "theme_color":"#fbf7f0",
