@@ -3,6 +3,8 @@
 <head>
  <meta charset="utf-8">
  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+ <meta name="color-scheme" content="only light">
+ <meta name="mobile-web-app-capable" content="yes">
  <meta name="theme-color" content="#fbf7f0">
  <meta name="description" content="ЕмМолоко — дневник молочной лестницы iMAP для родителей. Автор-создатель: Коршунов Максим Александрович, аллерголог-иммунолог, педиатр.">
  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
@@ -27,14 +29,14 @@
  <div class="em-stage">
   <div class="em-phone" aria-label="ЕмМолоко — дневник молочной лестницы">
    <header class="em-header">
-    <div class="em-brand"><span class="em-logo"><img data-em-asset="icon" width="56" height="56" alt="Логотип ЕмМолоко: капля, круг, ступеньки и плюс"></span><div><strong>ЕмМолоко</strong><div class="em-tag">Маленькие шаги каждый день</div></div><span class="em-demo">1.0.0</span></div>
+    <div class="em-brand"><span class="em-logo"><img data-em-asset="icon" width="56" height="56" alt="Логотип ЕмМолоко: капля, круг, ступеньки и плюс"></span><div><strong>ЕмМолоко</strong><div class="em-tag">Маленькие шаги каждый день</div></div></div>
     <div class="em-profile"><button type="button" data-view="profile" id="em-profile-button" class="em-link">Профиль ребёнка</button><button type="button" data-view="help" class="em-help">При реакции</button></div></header>
    <nav class="em-nav" aria-label="Разделы приложения">
-    <button type="button" data-view="today" aria-pressed="false" class="cursor-interaction">Сегодня</button>
-    <button type="button" data-view="ladder" aria-pressed="false" class="cursor-interaction">Лестница</button>
-    <button type="button" data-view="diary" aria-pressed="false" class="cursor-interaction">Дневник</button>
-    <button type="button" data-view="plan" aria-pressed="false" class="cursor-interaction">План врача</button>
-    <button type="button" data-view="more" aria-pressed="false" class="cursor-interaction">Памятка</button>
+    <button type="button" data-view="today" aria-pressed="false" class="cursor-interaction"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="4" y="5" width="16" height="16" rx="3"/><path d="M8 3v4m8-4v4M4 10h16m-11 5 2 2 4-4"/></svg><span>Сегодня</span></button>
+    <button type="button" data-view="ladder" aria-pressed="false" class="cursor-interaction"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 20h6v-6h6V8h6V3M3 20V3m0 17h18"/></svg><span>Лестница</span></button>
+    <button type="button" data-view="diary" aria-pressed="false" class="cursor-interaction"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 5v15m0-15C9 3 5 3 3 4v15c3-1 6-1 9 1 3-2 6-2 9-1V4c-2-1-6-1-9 1Z"/></svg><span>Дневник</span></button>
+    <button type="button" data-view="plan" aria-pressed="false" class="cursor-interaction"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="5" y="5" width="14" height="16" rx="3"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M12 11v6m-3-3h6"/></svg><span>План врача</span></button>
+    <button type="button" data-view="more" aria-pressed="false" class="cursor-interaction"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="5" y="3" width="14" height="18" rx="3"/><path d="M9 8h6m-6 4h6m-6 4h4"/></svg><span>Памятка</span></button>
    </nav>
    <main>
     <div id="em-storage-error" class="em-notice em-alert" role="alert" hidden></div><div id="em-update-bar" class="em-notice" hidden>Доступна новая версия. Дневник сохранится.<button type="button" id="em-update" class="em-wide">Обновить приложение</button></div><p id="em-status" class="em-status" role="status" hidden></p>
@@ -59,7 +61,7 @@
 </section>
 <section data-panel="progress" hidden><button type="button" data-view="ladder" class="em-link">← Лестница</button><h2>Готовность к следующей ступени</h2><div id="em-progress-status" class="em-notice" role="status"></div><div id="em-progress-count" class="em-card"></div><div id="em-progress-list" class="em-card"></div><p class="em-small">Не складываем маленькие порции в одну полную. Наращивание, незавершённое наблюдение, повторные записи в одну дату и продукты другого рецепта не увеличивают счётчик.</p><button type="button" id="em-review" class="em-wide">Добавить вопрос о переходе в отчёт</button><p class="em-small">Счётчик помогает следовать согласованному плану. Он не устанавливает переносимость и не переводит ребёнка автоматически.</p><button type="button" data-view="plan" class="em-link">Открыть план врача</button></section>
 <section data-panel="diary" hidden>
- <p class="em-eyebrow">Наблюдения родителей</p><h2>Дневник и отчёт</h2><div class="em-segment"><button type="button" id="em-journal-toggle" aria-pressed="true" class="cursor-interaction">Записи</button><button type="button" id="em-report-toggle" aria-pressed="false" class="cursor-interaction">Для врача</button></div><div id="em-journal"><button type="button" data-view="record" class="em-primary em-wide">Добавить запись</button><p class="em-note">При поздних симптомах дополните исходную запись.</p><div id="em-entries"></div></div><div id="em-report" hidden><div class="em-actions no-print"><button type="button" id="em-print-report">Печать / PDF</button><button type="button" id="em-csv">Выгрузить CSV</button></div><div id="em-counts" class="em-counts"></div><div id="em-report-body" class="em-card"></div><div id="em-report-log"></div><p class="em-small">Отчёт формируется на этом устройстве. Врачу он автоматически не отправляется.</p></div>
+ <p class="em-eyebrow">Наблюдения родителей</p><h2>Дневник и отчёт</h2><div class="em-segment"><button type="button" id="em-journal-toggle" aria-pressed="true" class="cursor-interaction">Записи</button><button type="button" id="em-report-toggle" aria-pressed="false" class="cursor-interaction">Для врача</button></div><div id="em-journal"><button type="button" data-view="record" class="em-primary em-wide">Добавить запись</button><p class="em-note">При поздних симптомах дополните исходную запись.</p><div id="em-entries"></div></div><div id="em-report" hidden><div class="em-actions no-print"><button type="button" id="em-print-report">Печать / PDF</button></div><div id="em-counts" class="em-counts"></div><div id="em-report-body" class="em-card"></div><div id="em-report-log"></div><p class="em-small">Отчёт формируется на этом устройстве. Врачу он автоматически не отправляется.</p></div>
 </section>
 <section data-panel="record" hidden>
  <button type="button" data-view="diary" class="em-link">← Дневник</button><h2 id="em-record-title">Записать приём</h2><p id="em-record-context" class="em-note"></p><div class="em-notice">Записываем уже произошедший приём. Это не разрешение дать продукт.</div>
@@ -101,15 +103,15 @@
  <label>Имя или обращение<input id="em-child-name" maxlength="80" autocomplete="off" placeholder="Например, Миша"></label>
  <label>Дата рождения · необязательно<input id="em-child-dob" type="date"></label>
  <button type="button" id="em-save-profile" class="em-primary em-wide">Сохранить профиль</button>
- <button type="button" data-view="settings" class="em-link">Данные и резервная копия</button>
+ <button type="button" data-view="settings" class="em-link">Данные и установка</button>
 </section>
 <section data-panel="settings" hidden>
  <h2>Данные и установка</h2>
  <div class="em-card"><h3>Хранение на устройстве</h3><p class="em-note">Дневник хранится только в этом браузере или установленном приложении. Автор не получает записи. При очистке данных браузера, смене телефона или адреса сайта дневник может стать недоступен.</p><p class="em-note">Резервная копия содержит профиль и записи без шифрования. Храните её в доступном только вам месте. Импорт восстанавливает дневник целиком.</p><button type="button" id="em-export" class="em-primary em-wide">Сохранить резервную копию</button><label>Восстановить из копии JSON<input type="file" id="em-import-file" accept=".json,application/json"></label><div id="em-import-preview" class="em-notice" hidden><p id="em-import-details"></p><button type="button" id="em-import-apply" class="em-wide">Заменить дневник данными из копии</button><button type="button" id="em-import-cancel" class="em-link">Отмена</button></div><p id="em-backup-status" class="em-small"></p></div>
- <div class="em-card"><h3>Установка на телефон</h3><button type="button" id="em-install" class="em-primary em-wide" hidden>Установить ЕмМолоко</button><p>На iPhone: откройте приложение в Safari → «Поделиться» → «На экран Домой».</p><p>На Android: откройте приложение в Chrome → меню ⋮ → «Установить приложение» или «Добавить на главный экран».</p><p id="em-offline-status" class="em-small">Проверяем доступность без интернета…</p><p class="em-note">Один раз откройте приложение с интернетом. Затем основные экраны, рецепты и дневник доступны без сети. Внешние ссылки на документы и Taplink требуют интернета.</p></div>
+ <div class="em-card"><h3>Установка на телефон</h3><button type="button" id="em-install" class="em-primary em-wide" hidden>Установить ЕмМолоко</button><p>На iPhone: откройте приложение в Safari → «Поделиться» → «На экран Домой».</p><p>На Android: откройте приложение в Chrome → меню ⋮ → «Установить приложение» или «Добавить на главный экран».</p><p id="em-install-status" class="em-note" role="status">Отдельный файл скачивать не нужно: приложение добавляется на главный экран из браузера. Если Chrome предлагает выбор, можно выбрать «Создать ярлык». Для первого открытия нужен интернет.</p><p id="em-offline-status" class="em-small">Проверяем доступность без интернета…</p><p class="em-note">Один раз откройте приложение с интернетом. Затем основные экраны, рецепты и дневник доступны без сети. Внешние ссылки на документы и Taplink требуют интернета.</p></div>
  <div class="em-card"><h3>Конфиденциальность</h3><p class="em-note">Приложение не отправляет медицинские записи на сервер и не использует аналитику. Сервер размещения получает обычные технические сведения при загрузке сайта. Внешние страницы открываются только при переходе по ссылке.</p><p class="em-note">Доступ к дневнику есть у человека, имеющего доступ к этому устройству и браузеру. Для защиты используйте блокировку устройства. Режим инкогнито не подходит для длительного ведения дневника.</p></div>
  <details><summary>Начать новый дневник</summary><p class="em-note">Удалит профиль, план и записи из этого браузера. Сначала сохраните резервную копию. Обновление приложения этого не требует.</p><button type="button" id="em-reset" class="em-wide">Удалить данные на этом устройстве</button></details>
- <p class="em-small">ЕмМолоко · версия <span id="em-version">1.0.0</span></p>
+ <p class="em-small">ЕмМолоко · версия <span id="em-version">1.0.1</span></p>
 </section>
 
 </main>

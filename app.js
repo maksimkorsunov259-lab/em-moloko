@@ -1,7 +1,7 @@
 import {imapSteps,recipeSource} from './recipes.js';
-import {KEY,clone,initialData,localDate,emptyDaily,targets,routeBlock,hasSymptoms,evaluateProgress,parseBackup,validateRecordInput,validDate,csv} from './core.js';
+import {KEY,clone,initialData,localDate,emptyDaily,targets,routeBlock,hasSymptoms,evaluateProgress,parseBackup,validateRecordInput,validDate} from './core.js';
 import {load,save} from './storage.js';
-const VERSION='1.0.0',BUILD='edbc38347c9e';
+const VERSION='1.0.1',BUILD='af3bd966f939';
 const root=document.getElementById('em-demo'),el=id=>root.querySelector('#em-'+id),all=q=>[...root.querySelectorAll(q)];
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const unit=r=>({piece:'шт.',g:'г',ml:'мл'}[r.unit]);
@@ -70,7 +70,6 @@ el('review').addEventListener('click',async()=>{if(await commit(d=>d.question=tr
 el('journal-toggle').addEventListener('click',()=>{report=false;renderDiary();});el('report-toggle').addEventListener('click',()=>{report=true;renderDiary();});
 function download(content,type,name){const url=URL.createObjectURL(new Blob([content],{type})),a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);}
 el('print-report').addEventListener('click',()=>{report=true;renderDiary();document.title='ЕмМолоко — отчёт для врача';window.print();document.title='ЕмМолоко — дневник молочной лестницы';});
-el('csv').addEventListener('click',()=>download(csv(data),'text/csv;charset=utf-8',`em-moloko-report-${localDate()}.csv`));
 el('export').addEventListener('click',()=>{let raw;try{raw=readOnly?localStorage.getItem(KEY):JSON.stringify(data,null,2);}catch{notice('Браузер не даёт прочитать сохранённые данные.');return;}if(!raw){notice('Сохранённых данных для копии нет.');return;}download(raw,'application/json',`em-moloko-backup-${localDate()}.json`);notice('Копия подготовлена. Убедитесь, что файл сохранился в загрузках.');});
 el('import-file').addEventListener('change',async()=>{const file=el('import-file').files[0];if(!file)return;try{if(file.size>8_000_000)throw Error('Размер файла превышает 8 МБ.');pendingImport=parseBackup(await file.text());el('import-details').textContent=`Ребёнок: ${pendingImport.profile.name||'имя не указано'}. Записей: ${pendingImport.records.length}. Копия от ${new Date(pendingImport.updatedAt).toLocaleString('ru-RU')}. Текущий дневник будет заменён целиком; сначала сохраните его копию.`;el('import-preview').hidden=false;}catch(e){pendingImport=null;el('import-preview').hidden=true;notice(e.message);}el('import-file').value='';});
 el('import-cancel').addEventListener('click',()=>{pendingImport=null;el('import-preview').hidden=true;});
@@ -81,7 +80,15 @@ window.addEventListener('storage',e=>{if(e.key!==KEY)return;if(dirty){storageErr
 window.addEventListener('pageshow',()=>{if(!dirty)paint();});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!dirty)paint();});
 setInterval(()=>{if(!dirty&&['today','progress'].includes(view))paint();},60000);
-window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstall=e;el('install').hidden=false;});el('install').addEventListener('click',async()=>{if(deferredInstall){await deferredInstall.prompt();deferredInstall=null;el('install').hidden=true;}});
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstall=e;el('install').hidden=false;});
+el('install').addEventListener('click',async()=>{
+ if(!deferredInstall)return;
+ const prompt=deferredInstall;deferredInstall=null;el('install').hidden=true;
+ try{await prompt.prompt();const choice=await prompt.userChoice;el('install-status').textContent=choice.outcome==='accepted'?'Запрос передан браузеру. Дождитесь завершения установки и проверьте иконку на главном экране.':'Установка отменена. Дневник можно продолжать вести в браузере.';}
+ catch{el('install-status').textContent='Браузер не смог запустить установку. Откройте меню Chrome → «Добавить на главный экран». Если установка снова не проходит, пользуйтесь дневником по этой же ссылке.';}
+});
+window.addEventListener('appinstalled',()=>{deferredInstall=null;el('install').hidden=true;el('install-status').textContent='Браузер сообщил об установке. Откройте ЕмМолоко с главного экрана.';});
+if(window.matchMedia('(display-mode: standalone)').matches||navigator.standalone===true)el('install-status').textContent='ЕмМолоко открыто как установленное приложение.';
 el('update').addEventListener('click',()=>{if(dirty&&!confirm('Несохранённые изменения будут потеряны. Обновить приложение?'))return;dirty=false;updateRequested=true;registration?.waiting?.postMessage({type:'ACTIVATE'});});
 if('serviceWorker' in navigator&&window.isSecureContext){navigator.serviceWorker.register('./sw.js').then(async reg=>{registration=reg;const ready=await navigator.serviceWorker.ready;el('offline-status').textContent=ready.active?'Приложение подготовлено для работы без интернета.':'Первое сохранение для работы без интернета…';const update=()=>{if(reg.waiting)el('update-bar').hidden=false;};update();reg.addEventListener('updatefound',()=>{reg.installing?.addEventListener('statechange',update);});}).catch(()=>{el('offline-status').textContent='Не удалось подготовить работу без интернета. Дневник сохраняется, но для открытия приложения пока нужна сеть.';});let reloading=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(updateRequested&&!reloading){reloading=true;location.reload();}});}else el('offline-status').textContent='Для установки и работы без интернета откройте приложение по защищённой ссылке HTTPS.';
 show(data.guideRead?'today':'profile',{force:true});
