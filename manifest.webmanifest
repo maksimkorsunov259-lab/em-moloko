@@ -1,0 +1,10 @@
+{
+ "id":"./", "name":"ЕмМолоко", "short_name":"ЕмМолоко", "lang":"ru",
+ "description":"Дневник молочной лестницы iMAP для родителей",
+ "start_url":"./", "scope":"./", "display":"standalone",
+ "background_color":"#fbf7f0", "theme_color":"#fbf7f0",
+ "icons":[
+  {"src":"./assets/icon-192.png","sizes":"192x192","type":"image/png","purpose":"any"},
+  {"src":"./assets/icon-512.png","sizes":"512x512","type":"image/png","purpose":"any"}
+ ]
+}
