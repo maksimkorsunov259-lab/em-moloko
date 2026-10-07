@@ -1,7 +1,7 @@
 import {imapSteps,recipeSource} from './recipes.js';
 import {KEY,clone,initialData,localDate,emptyDaily,targets,routeBlock,hasSymptoms,evaluateProgress,parseBackup,validateRecordInput,validDate,pieceFractions} from './core.js';
 import {load,save} from './storage.js';
-const VERSION='1.0.2',BUILD='65348839015f';
+const VERSION='1.0.3',BUILD='1d0978c04834';
 const root=document.getElementById('em-demo'),el=id=>root.querySelector('#em-'+id),all=q=>[...root.querySelectorAll(q)];
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const unit=r=>({piece:'шт.',g:'г',ml:'мл'}[r.unit]);
@@ -9,7 +9,7 @@ const dateLabel=d=>validDate(d)?new Date(d+'T12:00:00').toLocaleDateString('ru-R
 const names={pending:'Наблюдение продолжается',none:'Наблюдение завершено без симптомов',skin:'Сыпь / зуд / отёк',gut:'Желудочно-кишечные симптомы',other:'Другие симптомы',danger:'Опасные признаки'};
 const diagnoses={nonige:'Лёгкая / среднетяжёлая не-IgE АБКМ',ige:'IgE-опосредованная АБКМ',fpies:'FPIES',severe:'Другая тяжёлая не-IgE форма',unknown:'Диагноз ещё не уточнён'};
 const protocols={imap:'iMAP · 6 ступеней',individual:'Индивидуальное ведение в клинике'};
-const assets={icon:'./assets/icon-192.png',photo:'./assets/author.jpg',qr:'./assets/taplink-qr.png'};
+const assets={icon:'./assets/icon-192.png',photo:'./assets/author.png',qr:'./assets/taplink-qr.png'};
 all('[data-em-author]').forEach(host=>host.append(el('author-template').content.cloneNode(true)));
 all('[data-em-asset]').forEach(img=>img.src=assets[img.dataset.emAsset]);
 let data,readOnly=false,dirty=false,view='today',editing=null,selectedStep=0,selectedDay=localDate(),recipeIndex=0,report=false,beforeAbout='today',pendingImport=null,deferredInstall=null,registration=null,updateRequested=false;
@@ -91,6 +91,6 @@ el('install').addEventListener('click',async()=>{
 });
 window.addEventListener('appinstalled',()=>{deferredInstall=null;el('install').hidden=true;el('install-status').textContent='Браузер сообщил об установке. Откройте ЕмМолоко с главного экрана.';});
 if(window.matchMedia('(display-mode: standalone)').matches||navigator.standalone===true)el('install-status').textContent='ЕмМолоко открыто как установленное приложение.';
-el('update').addEventListener('click',()=>{if(dirty&&!confirm('Несохранённые изменения будут потеряны. Обновить приложение?'))return;dirty=false;updateRequested=true;registration?.waiting?.postMessage({type:'ACTIVATE'});});
+el('update').addEventListener('click',()=>{if(updateRequested||!registration?.waiting)return;if(!confirm('Обновить приложение? Сохранённый дневник останется. Если вы редактируете запись или настройки, сначала сохраните их: несохранённые поля после перезапуска будут потеряны.'))return;dirty=false;updateRequested=true;el('update').disabled=true;el('update-message').textContent='Обновляем приложение…';registration.waiting.postMessage({type:'ACTIVATE'});});
 if('serviceWorker' in navigator&&window.isSecureContext){navigator.serviceWorker.register('./sw.js').then(async reg=>{registration=reg;const ready=await navigator.serviceWorker.ready;el('offline-status').textContent=ready.active?'Приложение подготовлено для работы без интернета.':'Первое сохранение для работы без интернета…';const update=()=>{if(reg.waiting)el('update-bar').hidden=false;};update();reg.addEventListener('updatefound',()=>{reg.installing?.addEventListener('statechange',update);});}).catch(()=>{el('offline-status').textContent='Не удалось подготовить работу без интернета. Дневник сохраняется, но для открытия приложения пока нужна сеть.';});let reloading=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(updateRequested&&!reloading){reloading=true;location.reload();}});}else el('offline-status').textContent='Для установки и работы без интернета откройте приложение по защищённой ссылке HTTPS.';
 show(data.guideRead?'today':'profile',{force:true});

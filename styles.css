@@ -8,9 +8,15 @@
 :root { color-scheme:only light; background:#f6efe5; }
 body { margin:0; padding:0; font-family:system-ui,sans-serif; }
 #em-demo .em-stage { padding:0; }
-#em-demo .em-phone { max-width:680px; min-height:100dvh; border-radius:0; border:0; }
+#em-demo .em-phone { max-width:680px; min-height:100dvh; border-radius:0; border:0; overflow:clip; }
 #em-demo .em-header { padding-top:max(22px,env(safe-area-inset-top)); }
-#em-demo .em-nav { position:sticky; top:0; z-index:5; }
+#em-demo .em-topbar { position:sticky; top:0; z-index:12; }
+#em-demo .em-update-banner{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 24px;background:var(--em-soft);border-bottom:1px solid var(--em-line);color:var(--em-ink)}
+#em-demo .em-update-banner strong{font-size:15px}
+#em-demo .em-update-banner p{font-size:13px;line-height:1.4;margin:5px 0 0}
+#em-demo .em-update-banner button{flex-shrink:0;min-height:44px;padding:9px 12px;font-size:16px;line-height:1.5;font-weight:400;border-radius:12px}
+@media(max-width:480px){#em-demo .em-update-banner{align-items:stretch;flex-direction:column;padding:12px 14px}#em-demo .em-update-banner button{width:100%}}
+#em-demo .em-author-photo{object-position:center 25%}
 #em-demo .em-brand { padding-right:0; }
 #em-demo .em-foot { padding-bottom:max(22px,env(safe-area-inset-bottom)); }
 #em-demo .em-dose { font-size:26px; overflow-wrap:anywhere; }
@@ -30,7 +36,7 @@ body { margin:0; padding:0; font-family:system-ui,sans-serif; }
 @media (max-width:380px){#em-demo .em-author-head{grid-template-columns:65px minmax(0,1fr)}#em-demo .em-author-photo{width:65px}#em-demo .em-author .em-eyebrow{letter-spacing:.5px}#em-demo .em-author-qr{grid-template-columns:94px minmax(0,1fr);gap:12px}#em-demo .em-author-qr img{width:94px;height:94px}}
 @media print {
  :root{color-scheme:light;background:#fff}body{background:#fff}
- #em-demo .em-header,#em-demo .em-nav,#em-demo .em-foot,#em-demo .no-print,#em-demo button,#em-demo #em-status,#em-demo #em-storage-error,#em-demo #em-update-bar{display:none!important}
+ #em-demo .em-header,#em-demo .em-topbar,#em-demo .em-foot,#em-demo .no-print,#em-demo button,#em-demo #em-status,#em-demo #em-storage-error{display:none!important}
  #em-demo .em-phone{max-width:none;min-height:0;background:#fff}
  #em-demo main{padding:0}#em-demo .em-card{padding:8px 0;margin:8px 0;background:#fff}
  #em-demo .em-entry{break-inside:avoid}#em-demo .em-note,#em-demo .em-small{color:#333}

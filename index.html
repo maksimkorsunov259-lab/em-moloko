@@ -32,6 +32,8 @@
    <header class="em-header">
     <div class="em-brand"><span class="em-logo"><img data-em-asset="icon" width="56" height="56" alt="Логотип ЕмМолоко: капля, круг, ступеньки и плюс"></span><div><strong>ЕмМолоко</strong><div class="em-tag">Маленькие шаги каждый день</div></div></div>
     <div class="em-profile"><button type="button" data-view="profile" id="em-profile-button" class="em-link">Профиль ребёнка</button><button type="button" data-view="help" class="em-help">При реакции</button></div></header>
+   <div class="em-topbar">
+   <aside id="em-update-bar" class="em-update-banner" hidden aria-label="Обновление приложения"><div><strong>Доступна новая версия «ЕмМолоко»</strong><p id="em-update-message" role="status">Сохранённый дневник останется на устройстве.</p></div><button type="button" id="em-update" class="em-primary">Обновить приложение</button></aside>
    <nav class="em-nav" aria-label="Разделы приложения">
     <button type="button" data-view="today" aria-pressed="false" class="cursor-interaction"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="4" y="5" width="16" height="16" rx="3"/><path d="M8 3v4m8-4v4M4 10h16m-11 5 2 2 4-4"/></svg><span>Сегодня</span></button>
     <button type="button" data-view="ladder" aria-pressed="false" class="cursor-interaction"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 20h6v-6h6V8h6V3M3 20V3m0 17h18"/></svg><span>Лестница</span></button>
@@ -39,8 +41,9 @@
     <button type="button" data-view="plan" aria-pressed="false" class="cursor-interaction"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="5" y="5" width="14" height="16" rx="3"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M12 11v6m-3-3h6"/></svg><span>План врача</span></button>
     <button type="button" data-view="more" aria-pressed="false" class="cursor-interaction"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="5" y="3" width="14" height="18" rx="3"/><path d="M9 8h6m-6 4h6m-6 4h4"/></svg><span>Памятка</span></button>
    </nav>
+   </div>
    <main>
-    <div id="em-storage-error" class="em-notice em-alert" role="alert" hidden></div><div id="em-update-bar" class="em-notice" hidden>Доступна новая версия. Дневник сохранится.<button type="button" id="em-update" class="em-wide">Обновить приложение</button></div><p id="em-status" class="em-status" role="status" hidden></p>
+    <div id="em-storage-error" class="em-notice em-alert" role="alert" hidden></div><p id="em-status" class="em-status" role="status" hidden></p>
     <section data-panel="guide">
  <p class="em-eyebrow">Перед началом iMAP</p><h2>Один маршрут.<br>В своём темпе.</h2><p>«ЕмМолоко» — дневник домашней шестиступенчатой лестницы для ребёнка с подтверждённой лёгкой / среднетяжёлой не-IgE АБКМ.</p>
  <div class="em-card"><h3>Начало согласуйте с врачом</h3><p class="em-note">Аллерголог определяет готовность ребёнка, стартовую ступень, наращивание порции и наблюдение. При других диагнозах или факторах риска домашний трекер недоступен.</p><button type="button" data-view="plan" class="em-link">Открыть план врача</button></div>
