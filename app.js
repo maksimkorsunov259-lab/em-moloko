@@ -1,7 +1,7 @@
 import {imapSteps,recipeSource} from './recipes.js';
 import {KEY,clone,initialData,localDate,emptyDaily,targets,routeBlock,hasSymptoms,evaluateProgress,parseBackup,validateRecordInput,validDate,pieceFractions} from './core.js';
 import {load,save} from './storage.js';
-const VERSION='1.0.3',BUILD='1d0978c04834';
+const VERSION='1.0.4',BUILD='0f51ff5fe962';
 const root=document.getElementById('em-demo'),el=id=>root.querySelector('#em-'+id),all=q=>[...root.querySelectorAll(q)];
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const unit=r=>({piece:'шт.',g:'г',ml:'мл'}[r.unit]);
