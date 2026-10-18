@@ -49,3 +49,13 @@ body { margin:0; padding:0; font-family:system-ui,sans-serif; }
 #em-demo .em-red-flags{padding-left:21px;font-size:14px;line-height:1.55}#em-demo .em-red-flags li{margin:7px 0}
 #em-demo .em-support{margin-top:18px;padding-top:18px;border-top:1px solid var(--em-line)}#em-demo .em-support-link{display:inline-block;margin-top:8px;color:var(--em-accent);font-size:14px}
 #em-demo .em-portion-buttons{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}#em-demo .em-portion-buttons button{padding:8px 3px;font-size:15px}#em-demo .em-portion-buttons small{display:block;font-size:10px;color:var(--em-muted)}#em-demo .em-portion-buttons button[aria-pressed=true]{background:var(--em-soft);border-color:var(--em-accent)}
+
+#em-demo .em-patient-switch{display:flex;align-items:end;gap:12px;padding:8px 20px 12px;background:var(--em-paper);border-top:1px solid var(--em-line)}
+#em-demo .em-patient-switch label{flex:1;min-width:0;margin:0;color:var(--em-muted)}
+#em-demo .em-patient-switch select{color:var(--em-ink);text-overflow:ellipsis}
+#em-demo .em-patient-switch button{flex-shrink:0}
+#em-demo .em-patient-card{text-align:left;overflow-wrap:anywhere}
+#em-demo .em-patient-card strong,#em-demo .em-patient-card span{display:block}
+#em-demo .em-patient-card span{font-size:12px;color:var(--em-muted);margin-top:4px}
+#em-demo .em-patient-card[aria-pressed=true]{border-color:var(--em-accent);background:var(--em-soft)}
+@media(max-width:380px){#em-demo .em-patient-switch{padding:8px 13px 12px;gap:8px}#em-demo .em-patient-switch button{padding:9px;font-size:14px}}
