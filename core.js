@@ -4,7 +4,7 @@ export const pieceFractions=[8,7,6,5,4,3,2,1].map(denominator=>({label:denominat
 export const clone=x=>JSON.parse(JSON.stringify(x));
 export const localDate=(d=new Date())=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 export const emptyDaily=()=>({date:localDate(),well:false,asthma:false,changes:false,prepared:false});
-export function initialData(){return {app:APP,schema:SCHEMA,revision:0,updatedAt:new Date().toISOString(),profile:{name:'',dob:''},plan:{revision:1,protocol:'imap',phenotype:'unknown',current:0,observeHours:0,anaphylaxis:false,traces:false,bakedReaction:false,asthma:false,settled:false,contact:'',followup:''},records:[],paused:false,pausedAt:'',daily:emptyDaily(),guideRead:false,question:false};}
+export function initialData(){return {app:APP,schema:SCHEMA,revision:0,updatedAt:new Date().toISOString(),profile:{name:'',dob:''},plan:{revision:1,protocol:'imap',phenotype:'unknown',current:0,observeHours:0,anaphylaxis:false,traces:false,bakedReaction:false,asthma:false,settled:false,contact:'',followup:''},records:[],paused:false,pausedAt:'',daily:emptyDaily(),guideRead:false,question:false,questions:''};}
 export function targets(p){const s=imapSteps[p.current];return {...p,target:s.target,unit:s.unit,recipeKey:s.key};}
 export function routeBlock(p){
  if(p.phenotype!=='nonige')return 'При этом диагнозе домашний трекер использовать нельзя: для этих состояний он не валидирован, безопасность и эффективность не установлены. Рекомендована консультация лечащего аллерголога-иммунолога.';
@@ -14,7 +14,7 @@ export function routeBlock(p){
  if(!Number.isInteger(p.observeHours)||p.observeHours<1||p.observeHours>168)return 'Укажите длительность наблюдения после приёма, согласованную с врачом.';
  return '';
 }
-export const hasSymptoms=r=>r.kind==='intake'&&!['none','pending'].includes(r.symptom);
+export const hasSymptoms=r=>['intake','symptom'].includes(r.kind)&&!['none','pending'].includes(r.symptom);
 export function evaluateProgress(data,now=Date.now()){
  const p=targets(data.plan),block=routeBlock(p);
  const own=data.records.filter(r=>!r.voided&&r.revision===p.revision&&r.step===p.current&&r.recipe===p.recipeKey&&r.unit===p.unit);
@@ -39,6 +39,7 @@ export function validateData(d){
  if(!object(d)||d.app!==APP||d.schema!==SCHEMA)fail('Это не резервная копия ЕмМолоко поддерживаемой версии.');
  if(!int(d.revision,0,Number.MAX_SAFE_INTEGER)||!iso(d.updatedAt))fail('Повреждена версия данных.');
  if(!object(d.profile)||!text(d.profile.name,80)||!text(d.profile.dob,10)||(d.profile.dob&&!validDate(d.profile.dob)))fail('Проверьте профиль ребёнка.');
+ if(d.questions!==undefined&&!text(d.questions,2000))fail('Вопросы врачу должны содержать не более 2000 символов.');
  const p=d.plan;
  if(!object(p)||!int(p.revision,1,Number.MAX_SAFE_INTEGER)||!['imap','individual'].includes(p.protocol)||!['nonige','ige','fpies','severe','unknown'].includes(p.phenotype)||!int(p.current,0,5)||!int(p.observeHours,0,168))fail('Повреждены параметры плана.');
  for(const k of ['anaphylaxis','traces','bakedReaction','asthma','settled'])if(!bool(p[k]))fail('Повреждены условия допуска.');
@@ -48,11 +49,12 @@ export function validateData(d){
  if(!Array.isArray(d.records)||d.records.length>20000)fail('В копии слишком много записей или неверный формат.');
  const ids=new Set();
  for(const r of d.records){
-  if(!object(r)||!text(r.id,80)||!r.id||ids.has(r.id)||!int(r.revision,1,p.revision)||!int(r.step,0,5)||!int(r.observeHours,1,168))fail('Повреждена запись или повторяется её идентификатор.');ids.add(r.id);
+  if(!object(r)||!text(r.id,80)||!r.id||ids.has(r.id)||!int(r.revision,1,p.revision)||!int(r.step,0,5)||!int(r.observeHours,r.kind==='symptom'?0:1,168))fail('Повреждена запись или повторяется её идентификатор.');ids.add(r.id);
   const s=imapSteps[r.step];
   if(r.recipe!==s.key||r.unit!==s.unit||r.target!==s.target||!validDate(r.date)||!/^\d{2}:\d{2}$/.test(r.time)||Number(r.time.slice(0,2))>23||Number(r.time.slice(3))>59||!iso(r.at)||!iso(r.updatedAt))fail('Повреждены продукт, единицы или время записи.');
-  if(!['intake','skip'].includes(r.kind)||!['buildup','full'].includes(r.phase)||!bool(r.recipeMatch)||!bool(r.voided))fail('Повреждён тип записи.');
+  if(!['intake','skip','symptom'].includes(r.kind)||!['buildup','full'].includes(r.phase)||!bool(r.recipeMatch)||!bool(r.voided))fail('Повреждён тип записи.');
   if(r.kind==='intake'&&(!Number.isFinite(r.amount)||r.amount<=0||r.amount>1000||!['pending','none','skin','gut','other','danger'].includes(r.symptom)))fail('Проверьте порцию и наблюдение.');
+  if(r.kind==='symptom'&&(r.amount!==0||!['skin','gut','other','danger'].includes(r.symptom)||!r.onset||r.recipeMatch||r.phase!=='buildup'))fail('Проверьте отдельную запись симптома.');
   if(r.kind==='skip'&&(r.amount!==0||r.symptom!==null))fail('Повреждена запись пропуска.');
   for(const [k,max] of [['note',600],['reason',120],['onset',80],['treatment',250],['timezone',80]])if(!text(r[k],max))fail('Слишком длинное или неверное поле записи.');
  }
@@ -60,7 +62,8 @@ export function validateData(d){
 }
 export function parseBackup(raw){if(typeof raw!=='string'||raw.length>8_000_000)fail('Размер файла превышает 8 МБ.');let value;try{value=JSON.parse(raw,(key,v)=>{if(['__proto__','constructor','prototype'].includes(key))throw Error('Unexpected key');return v;});}catch{fail('Файл не содержит корректную резервную копию JSON.');}return validateData(value);}
 export function validateRecordInput(r,now=Date.now()){
- if(!validDate(r.date)||!/^\d{2}:\d{2}$/.test(r.time)||!Number.isFinite(Date.parse(r.at))||Date.parse(r.at)>now)fail('Укажите корректные дату и время уже произошедшего приёма.');
+ if(!validDate(r.date)||!/^\d{2}:\d{2}$/.test(r.time)||!Number.isFinite(Date.parse(r.at))||Date.parse(r.at)>now)fail('Укажите корректные дату и время уже произошедшего события.');
+ if(r.kind==='symptom'&&(r.amount!==0||!['skin','gut','other','danger'].includes(r.symptom)))fail('Укажите симптом.');
  if(r.kind==='intake'&&(!Number.isFinite(r.amount)||r.amount<=0||r.amount>1000))fail('Введите фактически съеденную порцию больше 0 и не больше 1000.');
  if(r.kind==='intake'&&r.symptom==='none'&&Date.parse(r.at)+r.observeHours*3600000>now)fail('Время наблюдения ещё не закончилось. Выберите «наблюдение продолжается».');
  if(hasSymptoms(r)&&!r.onset)fail('Укажите время появления симптомов или выберите «неизвестно».');
@@ -70,6 +73,6 @@ export function csv(data){
  const q=v=>{let s=String(v??'');if(/^[\s]*[=+@-]/.test(s))s="'"+s;return '"'+s.replaceAll('"','""')+'"';};
  const rows=[['Дата','Время','Ступень','Продукт','Порция','Единицы','Фаза','Наблюдение','Часы наблюдения','Симптомы начались','Помощь','Заметка','Пропуск','Исключена','Период']];
  const observationNames={pending:'Наблюдение продолжается',none:'Наблюдение завершено без симптомов',skin:'Сыпь / зуд / отёк',gut:'Желудочно-кишечные симптомы',other:'Другие симптомы',danger:'Опасные признаки'};
- for(const r of data.records)rows.push([r.date,r.time,r.step+1,imapSteps[r.step].name,r.kind==='skip'?'':r.amount,r.kind==='skip'?'':r.unit==='piece'?'шт.':r.unit==='g'?'г':'мл',r.kind==='skip'?'':r.phase==='full'?'Полная порция':'Наращивание',observationNames[r.symptom]||'',r.kind==='skip'?'':r.observeHours,r.onset,r.treatment,r.note,r.reason,r.voided?'да':'нет',r.revision]);
+ for(const r of data.records){if(r.kind==='symptom'){rows.push([r.date,r.time,'','Отдельный симптом','','','',observationNames[r.symptom],'',r.onset,r.treatment,r.note,'',r.voided?'да':'нет',r.revision]);continue;}rows.push([r.date,r.time,r.step+1,imapSteps[r.step].name,r.kind==='skip'?'':r.amount,r.kind==='skip'?'':r.unit==='piece'?'шт.':r.unit==='g'?'г':'мл',r.kind==='skip'?'':r.phase==='full'?'Полная порция':'Наращивание',observationNames[r.symptom]||'',r.kind==='skip'?'':r.observeHours,r.onset,r.treatment,r.note,r.reason,r.voided?'да':'нет',r.revision]);}
  return '\uFEFF'+rows.map(row=>row.map(q).join(';')).join('\r\n');
 }
