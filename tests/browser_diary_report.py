@@ -14,8 +14,8 @@ with sync_playwright() as pw,tempfile.TemporaryDirectory() as tmp:
  def diary():p.locator('.em-nav [data-view=diary]').click();expect(panel('diary')).to_be_visible()
  def stored():return p.evaluate("JSON.parse(localStorage.getItem('em-moloko.diary.v1'))")
  def report():panel('diary').locator('[data-view=report]').click();expect(panel('report')).to_be_visible()
- expect(panel('today')).to_be_visible();panel('today').get_by_role('button',name='Что важно перед началом',exact=True).click();expect(panel('guide')).to_be_visible();expect(p.locator('#em-guide-back')).to_have_text('← Вернуться на «Сегодня»');p.locator('#em-guide-back').click();expect(panel('today')).to_be_visible()
- p.locator('#em-current-recipe').click();expect(p.locator('#em-recipe-back')).to_have_text('← Вернуться на «Сегодня»');p.locator('#em-recipe-back').click();expect(panel('today')).to_be_visible()
+ expect(panel('today')).to_be_visible();panel('today').get_by_role('button',name='Что важно перед началом',exact=True).click();expect(panel('guide')).to_be_visible();expect(p.locator('#em-guide-back')).to_have_text('← Сегодня');p.locator('#em-guide-back').click();expect(panel('today')).to_be_visible()
+ p.locator('#em-current-recipe').click();expect(p.locator('#em-recipe-back')).to_have_text('← Сегодня');p.locator('#em-recipe-back').click();expect(panel('today')).to_be_visible()
  diary();assert panel('diary').get_by_role('button',name='Для врача',exact=True).count()==0
  for width in [320,390,1440]:
   p.set_viewport_size({'width':width,'height':900});actions=panel('diary').locator('.em-diary-actions').bounding_box();r=panel('diary').locator('[data-view=report]').bounding_box();assert r['y']>=actions['y']+actions['height'];assert abs(r['width']-actions['width'])<1;assert not p.evaluate('document.documentElement.scrollWidth>innerWidth')

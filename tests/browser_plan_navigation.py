@@ -1,0 +1,22 @@
+"""Observation presets preserve prior plans/records and back buttons name destinations."""
+import os,tempfile
+from playwright.sync_api import sync_playwright,expect
+URL=os.environ.get('APP_URL','http://127.0.0.1:8055/em-moloko/')
+with sync_playwright() as pw,tempfile.TemporaryDirectory() as tmp:
+ c=pw.chromium.launch_persistent_context(tmp,executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox'],viewport={'width':390,'height':844});p=c.new_page();errors=[];accept=[False];p.on('pageerror',lambda e:errors.append(str(e)))
+ p.on('dialog',lambda d:d.accept() if accept[0] else d.dismiss());p.goto(URL);expect(p.locator('#em-profile-button')).to_be_visible()
+ p.evaluate('''async()=>{const {initialData,KEY}=await import('./core.js'),{initialCollection}=await import('./storage.js');const d=initialData();d.guideRead=true;Object.assign(d.plan,{phenotype:'nonige',settled:true,observeHours:12,contact:'Прежний контакт',followup:'2026-11-01'});d.records=[{id:'legacy',revision:1,step:0,observeHours:12,recipe:'AUK2025-biscuit',unit:'piece',target:3,date:'2026-10-01',time:'10:00',at:'2026-10-01T07:00:00.000Z',updatedAt:'2026-10-01T07:00:00.000Z',kind:'intake',phase:'buildup',amount:.25,symptom:'none',recipeMatch:true,voided:false,note:'История',reason:'',onset:'',treatment:'',timezone:'Europe/Moscow'}];localStorage.setItem(KEY,JSON.stringify(initialCollection(d)));}''');p.reload()
+ def diary():return p.evaluate("JSON.parse(localStorage.getItem('em-moloko.diary.v1')).patients[0].diary")
+ before=diary();p.locator('.em-nav [data-view=plan]').click();select=p.locator('#em-observe-hours');expect(select).to_have_value('12');assert select.evaluate('e=>e.tagName')=='SELECT';assert select.locator('option').all_text_contents()==['Выберите длительность','2 часа','6 часов','24 часа','48 часов','72 часа','12 ч. · ранее назначено'];assert p.locator('#em-contact,#em-followup').count()==0
+ p.locator('#em-save-plan').click();expect(p.locator('[data-panel=today]')).to_be_visible();saved=diary();assert saved['plan']==before['plan'];assert saved['records']==before['records']
+ p.locator('.em-nav [data-view=plan]').click();select.select_option('48');p.locator('#em-save-plan').click();expect(p.locator('[data-panel=plan]')).to_be_visible();assert diary()['plan']['observeHours']==12
+ accept[0]=True;p.locator('#em-save-plan').click();expect(p.locator('[data-panel=today]')).to_be_visible();saved=diary();assert saved['plan']['observeHours']==48;assert saved['plan']['revision']==2;assert saved['plan']['contact']==before['plan']['contact'];assert saved['plan']['followup']==before['plan']['followup'];assert saved['records']==before['records']
+ p.locator('.em-nav [data-view=plan]').click();assert select.locator('option').count()==6;expect(select).to_have_value('48');select.select_option('');p.locator('#em-save-plan').click();expect(p.locator('#em-plan-error')).to_be_visible();assert diary()['plan']['observeHours']==48
+ p.locator('.em-nav [data-view=today]').click();p.locator('[data-panel=today] [data-view=guide]').click();expect(p.locator('#em-guide-back')).to_have_text('← Сегодня');p.locator('#em-guide-back').click();p.locator('#em-current-recipe').click();expect(p.locator('#em-recipe-back')).to_have_text('← Сегодня');p.locator('#em-recipe-back').click()
+ p.locator('[data-view=help]').first.click();expect(p.locator('#family-help [data-family-about-close]')).to_have_text('← Сегодня');p.locator('#family-help [data-family-about-close]').click()
+ p.locator('.em-nav [data-view=diary]').click();p.locator('[data-panel=diary] [data-view=report]').click();expect(p.locator('[data-panel=report] [data-view=diary]')).to_have_text('← Дневник');p.locator('[data-view=about]').first.click();expect(p.locator('#family-about [data-family-about-close]')).to_have_text('← Отчёт для врача');p.locator('#family-about [data-family-about-close]').click()
+ p.locator('.em-nav [data-view=plan]').click()
+ for width in [320,390,1440]:
+  p.set_viewport_size({'width':width,'height':900});assert not p.evaluate('document.documentElement.scrollWidth>innerWidth')
+ p.evaluate('navigator.serviceWorker.ready');p.reload();c.set_offline(True);p.reload();p.locator('.em-nav [data-view=plan]').click();expect(select).to_have_value('48');assert diary()['records']==before['records'];assert not errors,errors;c.close()
+print('PASS: observation presets, legacy duration/contact/history preservation, cancellation, validation, destination labels, responsive and offline.')
