@@ -1,7 +1,7 @@
 import {imapSteps,recipeSource} from './recipes.js';
 import {KEY,clone,initialData,localDate,emptyDaily,targets,routeBlock,hasSymptoms,evaluateProgress,validateRecordInput,validDate,pieceFractions} from './core.js';
 import {load,save,initialCollection,activeDiary,addPatient,removePatient,parseArchive,restorePauses} from './storage.js';
-const VERSION='1.2.3',BUILD='40c0d02ec2ec';
+const VERSION='1.2.4',BUILD='6b0f4cd5a199';
 const root=document.getElementById('em-demo'),el=id=>root.querySelector('#em-'+id),all=q=>[...root.querySelectorAll(q)];
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const unit=r=>({piece:'шт.',g:'г',ml:'мл'}[r.unit]);
@@ -16,7 +16,7 @@ let collection,data,readOnly=false,busy=false,importSequence=0,dirty=false,view=
 try{collection=load(localStorage);data=activeDiary(collection);}catch{collection=initialCollection();data=activeDiary(collection);readOnly=true;storageError('Не удалось прочитать сохранённый дневник. Данные не перезаписаны. Откройте «Данные и установка», сохраните исходную копию и восстановите исправную резервную копию.');}
 selectedStep=data.plan.current;
 function notice(text){el('status').textContent=text;el('status').hidden=!text;}
-function storageError(text){el('storage-error').textContent=text;el('storage-error').hidden=!text;}
+function storageError(text){el('storage-error').textContent=text;el('storage-error').hidden=!text;FamilyData.syncStorage?.();}
 async function commitCollection(change){
  if(readOnly){storageError('Сохранение отключено, чтобы не перезаписать непрочитанные дневники. Сохраните исходную копию в разделе «Данные и установка».');return false;}
  if(busy){notice('Дождитесь завершения сохранения.');return false;}
@@ -62,7 +62,7 @@ function renderHeader(){
  el('patient-select').innerHTML=collection.patients.map((patient,index)=>`<option value="${esc(patient.id)}">${esc(patientLabel(patient,index))}${patient.diary.profile.dob?' · '+dateLabel(patient.diary.profile.dob):''}</option>`).join('');
  el('patient-select').value=collection.activeId;el('patient-select').disabled=readOnly||busy;
  el('add-patient').disabled=readOnly||busy;el('delete-patient').disabled=readOnly||busy;
- el('export-patient').disabled=readOnly||busy;
+ el('export-patient').disabled=readOnly||busy;FamilyData.refresh(collection.patients.length,currentPatientName());FamilyData.syncStorage?.();
 }
 function renderDaily(){const d=todayDaily();const labels={well:'Ребёнок здоров; кожа, живот и стул без обострения',asthma:'Нет признаков обострения астмы / бронхообструкции',changes:'Нет новых изменений, требующих обсуждения с врачом',prepared:'Продукт, порция, время наблюдения и план помощи подготовлены'};el('daily-checks').innerHTML=Object.entries(labels).map(([k,v])=>`<label class="em-check"><input type="checkbox" data-daily="${k}" ${d[k]?'checked':''}><span>${v}</span></label>`).join('');el('daily-result').textContent=Object.keys(labels).every(k=>d[k])?'Чек-лист заполнен. Дальнейшие действия — по плану врача.':'Если пункт не выполнен или есть сомнение, отложите приём / повышение и уточните действия.';}
 function renderHome(){
@@ -96,7 +96,7 @@ function updateSymptomWarning(){
  const value=el('event-symptom').value;el('event-warning').hidden=!value;
  el('event-warning').innerHTML=value==='danger'?'<strong>Сначала помощь, потом запись.</strong> Вызывайте <a href="tel:112">112</a> / <a href="tel:103">103</a> и выполняйте индивидуальный план помощи.':'При новых симптомах отложите пробу и повышение порции, действуйте по плану помощи и свяжитесь с врачом. При ухудшении не ждите сохранения записи.';
 }
-function renderSettings(){el('version').textContent=VERSION+' · '+BUILD;el('backup-status').textContent=`Пациентов: ${collection.patients.length}. Выбран: ${currentPatientName()}. Записей у выбранного пациента: ${data.records.length}. Последнее сохранение: ${new Date(collection.updatedAt).toLocaleString('ru-RU')}.`;}
+function renderSettings(){FamilyData.refresh(collection.patients.length,currentPatientName());FamilyData.syncStorage?.();el('version').textContent=VERSION;}
 function paint(){renderHeader();if(view==='today')renderHome();if(view==='ladder')renderLadder();if(view==='progress')renderProgress();if(view==='diary'||view==='report')renderDiary();if(view==='report'){el('report-questions').value=data.questions||'';el('questions-status').textContent='';}if(view==='recipes')renderRecipes();if(view==='recipe')renderRecipe();if(view==='settings')renderSettings();if(view==='patients')renderPatients();access();}
 const returnPageNames={today:'Сегодня',diary:'Дневник',report:'Отчёт для врача',symptom:'Новый симптом',record:'Запись',plan:'План врача',guide:'Что важно перед началом',more:'Памятка',recipes:'Рецепты и продукты',recipe:'Рецепт',ladder:'Лестница',progress:'Наблюдение и переход',profile:'Профиль',patients:'Пациенты',settings:'Данные и установка',rules:'Порции, наблюдение и переход'};
 let backPath=[],backPatient=null;
@@ -156,7 +156,7 @@ el('delete-patient').addEventListener('click',async()=>{
  const id=collection.activeId;
  if(await commitCollection(next=>removePatient(next,id))){activatePatient();notice('Профиль пациента удалён.');}
 });
-el('export').addEventListener('click',()=>{let raw;try{raw=readOnly?localStorage.getItem(KEY):JSON.stringify(load(localStorage),null,2);}catch{notice('Браузер не даёт прочитать сохранённые данные.');return;}if(!raw){notice('Сохранённых данных для копии нет.');return;}download(raw,'application/json',`em-moloko-all-patients-${localDate()}.json`);notice('Копия всех пациентов подготовлена. Убедитесь, что файл сохранился в загрузках.');});
+el('export').addEventListener('click',()=>{let raw;try{raw=readOnly?localStorage.getItem(KEY):JSON.stringify(collection,null,2);}catch{notice('Браузер не даёт прочитать сохранённые данные.');return;}if(!raw){notice('Сохранённых данных для копии нет.');return;}download(raw,'application/json',`em-moloko-all-patients-${localDate()}.json`);notice('Копия всех пациентов подготовлена. Убедитесь, что файл сохранился в загрузках.');});
 el('export-patient').addEventListener('click',()=>{
  if(readOnly||busy)return;
  download(JSON.stringify(data,null,2),'application/json',`em-moloko-patient-${collection.activeId}-${localDate()}.json`);notice('Копия выбранного пациента подготовлена: '+currentPatientName()+'.');
@@ -167,27 +167,25 @@ el('import-file').addEventListener('change',async()=>{
   if(file.size>30_000_000)throw Error('Размер файла превышает 30 МБ.');
   const incoming=parseArchive(await file.text());if(sequence!==importSequence)return;pendingImport=incoming;
   const value=incoming.value;
-  el('import-details').textContent=incoming.kind==='patient'?`Пациент: ${value.profile.name||'имя не указано'}. Записей: ${value.records.length}. Будет добавлен отдельный профиль; существующие пациенты и их записи сохранятся.`:`Пациентов: ${value.patients.length}. Записей: ${value.patients.reduce((n,p)=>n+p.diary.records.length,0)}. Профили: ${value.patients.map(patientLabel).join(', ')}. Все текущие пациенты будут заменены. Сначала сохраните их резервную копию.`;
-  el('import-apply').textContent=incoming.kind==='patient'?'Добавить пациента из копии':'Заменить всех пациентов данными из копии';el('import-preview').hidden=false;
+  el('import-details').textContent=incoming.kind==='patient'?`ЕмМолоко. Пациентов: 1. Пациент: ${value.profile.name||'имя не указано'}. Записей: ${value.records.length}.`:`ЕмМолоко. Пациентов: ${value.patients.length}. Записей: ${value.patients.reduce((n,p)=>n+p.diary.records.length,0)}. Профили: ${value.patients.map(patientLabel).join(', ')}.`;
+  el('import-preview').hidden=false;
+
  }catch(e){if(sequence!==importSequence)return;clearImport();notice(e.message);}
 });
 el('import-cancel').addEventListener('click',clearImport);
-el('import-apply').addEventListener('click',async()=>{
+async function restoreArchive(add){
  if(!pendingImport||busy)return;
- const incoming=clone(pendingImport);
- if(!confirm(incoming.kind==='patient'?'Добавить отдельного пациента из выбранной копии?':'Заменить всех пациентов выбранной резервной копией? Это не объединение записей.'))return;
+ const incoming=clone(pendingImport),diaries=incoming.kind==='patient'?[incoming.value]:incoming.value.patients.map(p=>p.diary);
+ if(!confirm(add?'Добавить пациентов из копии отдельными дневниками?':'Заменить ВСЕ данные выбранной копией? Сначала скачайте текущую резервную копию.'))return;
+ if(readOnly){notice('Сначала сохраните исходную копию. Для восстановления откройте исправную копию в браузере с доступным хранилищем.');return;}
  if(await commitCollection(next=>{
-  if(incoming.kind==='patient')addPatient(next,incoming.value);
+  if(add){if(next.patients.length+diaries.length>100)throw Error('Можно хранить до 100 пациентов.');diaries.forEach(d=>addPatient(next,d));}
+  else if(incoming.kind==='patient'){const fresh=initialCollection(incoming.value);next.patients=fresh.patients;next.activeId=fresh.activeId;}
   else{next.patients=incoming.value.patients;next.activeId=incoming.value.activeId;}
   restorePauses(next);
- })){activatePatient();notice(incoming.kind==='patient'?'Пациент добавлен из копии.':'Дневники пациентов восстановлены из копии.');}
-});
-el('reset').addEventListener('click',async()=>{
- if(busy||!confirm('Удалить ВСЕХ пациентов, их планы и все записи из этого браузера? Продолжайте только после сохранения резервной копии.'))return;
- if(readOnly){try{localStorage.removeItem(KEY);collection=initialCollection();data=activeDiary(collection);readOnly=false;}catch{storageError('Не удалось удалить данные.');return;}}
- else if(!await commitCollection(next=>{const fresh=initialCollection();next.patients=fresh.patients;next.activeId=fresh.activeId;}))return;
- storageError('');activatePatient();notice('Создан пустой дневник.');
-});
+ })){activatePatient();show('settings',{force:true});notice(add?'Пациенты добавлены из копии.':'Дневники восстановлены из копии.');}
+}
+el('import-add').addEventListener('click',()=>restoreArchive(true));el('import-apply').addEventListener('click',()=>restoreArchive(false));
 window.addEventListener('beforeunload',e=>{if(dirty||busy){e.preventDefault();e.returnValue='';}});
 window.addEventListener('storage',e=>{
  if(e.key!==KEY&&e.key!==null)return;
@@ -198,15 +196,21 @@ window.addEventListener('storage',e=>{
 window.addEventListener('pageshow',()=>{if(!dirty)paint();});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!dirty)paint();});
 setInterval(()=>{if(!dirty&&['today','progress'].includes(view))paint();},60000);
-window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstall=e;el('install').hidden=false;});
+FamilyData.watchStorage('#em-storage-error');
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstall=e;el('install').hidden=FamilyData.standalone();});
 el('install').addEventListener('click',async()=>{
- if(!deferredInstall)return;
+ if(!deferredInstall||FamilyData.standalone())return;
  const prompt=deferredInstall;deferredInstall=null;el('install').hidden=true;
- try{await prompt.prompt();const choice=await prompt.userChoice;el('install-status').textContent=choice.outcome==='accepted'?'Запрос передан браузеру. Дождитесь завершения установки и проверьте иконку на главном экране.':'Установка отменена. Дневник можно продолжать вести в браузере.';}
- catch{el('install-status').textContent='Браузер не смог запустить установку. Откройте меню Chrome → «Добавить на главный экран». Если установка снова не проходит, пользуйтесь дневником по этой же ссылке.';}
+ try{await prompt.prompt();const choice=await prompt.userChoice;el('install-status').textContent=choice.outcome==='accepted'?'Запрос передан браузеру. Дождитесь завершения установки.':'Установка отменена. Дневником можно пользоваться в браузере.';}
+ catch{el('install-status').textContent='Не удалось запустить установку. Попробуйте меню браузера; дневник остаётся доступен по этой ссылке.';}
 });
-window.addEventListener('appinstalled',()=>{deferredInstall=null;el('install').hidden=true;el('install-status').textContent='Браузер сообщил об установке. Откройте ЕмМолоко с главного экрана.';});
-if(window.matchMedia('(display-mode: standalone)').matches||navigator.standalone===true)el('install-status').textContent='ЕмМолоко открыто как установленное приложение.';
-el('update').addEventListener('click',()=>{if(updateRequested||!registration?.waiting)return;if(!confirm('Обновить приложение? Сохранённый дневник останется. Если вы редактируете запись или настройки, сначала сохраните их: несохранённые поля после перезапуска будут потеряны.'))return;dirty=false;updateRequested=true;el('update').disabled=true;el('update-message').textContent='Обновляем приложение…';registration.waiting.postMessage({type:'ACTIVATE'});});
-if('serviceWorker' in navigator&&window.isSecureContext){navigator.serviceWorker.register('./sw.js').then(async reg=>{registration=reg;const ready=await navigator.serviceWorker.ready;el('offline-status').textContent=ready.active?'Приложение подготовлено для работы без интернета.':'Первое сохранение для работы без интернета…';const update=()=>{if(reg.waiting)el('update-bar').hidden=false;};update();reg.addEventListener('updatefound',()=>{reg.installing?.addEventListener('statechange',update);});}).catch(()=>{el('offline-status').textContent='Не удалось подготовить работу без интернета. Дневник сохраняется, но для открытия приложения пока нужна сеть.';});let reloading=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(updateRequested&&!reloading){reloading=true;location.reload();}});}else el('offline-status').textContent='Для установки и работы без интернета откройте приложение по защищённой ссылке HTTPS.';
+window.addEventListener('appinstalled',()=>{deferredInstall=null;el('install').hidden=true;el('install-status').textContent='Браузер сообщил об установке. Откройте приложение с главного экрана.';});
+let updateChecking=false,reloadReady=false;
+const updateButtons=[el('update'),el('update-settings')];
+function offerUpdate(){const ready=!!registration?.waiting||reloadReady;el('update-bar').hidden=!ready;updateButtons.forEach(b=>{b.hidden=!ready;b.disabled=updateRequested;});}
+async function checkUpdate(){if(updateChecking)return;updateChecking=true;el('check-update').disabled=true;el('update-check-status').textContent='Проверяем обновления…';try{if(!navigator.onLine)throw Error('Нет подключения к интернету. Повторите проверку после подключения.');if(!registration)throw Error('Обновления пока недоступны. Повторите открытие с интернетом.');const ready=await AppUpdates.check(registration);el('update-check-status').textContent=ready||reloadReady?'Обновление готово. Нажмите «Обновить приложение».':'Проверка завершена. Готовых обновлений нет.';}catch(e){el('update-check-status').textContent=e.message;}finally{updateChecking=false;el('check-update').disabled=false;offerUpdate();}}
+el('check-update').addEventListener('click',checkUpdate);
+async function activateUpdate(){if(updateRequested||!registration?.waiting&&!reloadReady)return;if(dirty||busy||readOnly||!el('storage-error').hidden){el('update-message').textContent='Сначала сохраните изменения. При ошибке сохранения скачайте резервную копию.';return;}if(!confirm('Обновить приложение? Сохранённые дневники останутся на устройстве.'))return;updateRequested=true;offerUpdate();el('update-message').textContent='Обновляем приложение…';if(reloadReady)location.reload();else registration.waiting.postMessage({type:'ACTIVATE'});}
+updateButtons.forEach(b=>b.addEventListener('click',activateUpdate));
+if('serviceWorker' in navigator&&window.isSecureContext){let previousController=navigator.serviceWorker.controller,reloading=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(updateRequested&&!reloading){reloading=true;location.reload();}else if(previousController){reloadReady=true;offerUpdate();}previousController=navigator.serviceWorker.controller;});navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(async reg=>{registration=reg;const watch=()=>{reg.installing?.addEventListener('statechange',offerUpdate);offerUpdate();};reg.addEventListener('updatefound',watch);watch();await AppUpdates.waitForInstall(reg);el('offline-status').textContent=reg.active?'Приложение подготовлено для работы без интернета.':'Подготовка работы без интернета…';}).catch(()=>{el('offline-status').textContent='Не удалось подготовить работу без интернета. Повторите открытие с подключением к сети.';});}else el('offline-status').textContent='Этот браузер не поддерживает работу приложения без интернета.';
 show(data.guideRead?'today':'profile',{force:true});
