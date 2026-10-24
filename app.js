@@ -1,7 +1,7 @@
 import {imapSteps,recipeSource} from './recipes.js';
 import {KEY,clone,initialData,localDate,emptyDaily,targets,routeBlock,hasSymptoms,evaluateProgress,validateRecordInput,validDate,pieceFractions} from './core.js';
 import {load,save,initialCollection,activeDiary,addPatient,removePatient,parseArchive,restorePauses} from './storage.js';
-const VERSION='1.2.4',BUILD='6b0f4cd5a199';
+const VERSION='1.2.5',BUILD='c29029439799';
 const root=document.getElementById('em-demo'),el=id=>root.querySelector('#em-'+id),all=q=>[...root.querySelectorAll(q)];
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const unit=r=>({piece:'шт.',g:'г',ml:'мл'}[r.unit]);
@@ -62,7 +62,7 @@ function renderHeader(){
  el('patient-select').innerHTML=collection.patients.map((patient,index)=>`<option value="${esc(patient.id)}">${esc(patientLabel(patient,index))}${patient.diary.profile.dob?' · '+dateLabel(patient.diary.profile.dob):''}</option>`).join('');
  el('patient-select').value=collection.activeId;el('patient-select').disabled=readOnly||busy;
  el('add-patient').disabled=readOnly||busy;el('delete-patient').disabled=readOnly||busy;
- el('export-patient').disabled=readOnly||busy;FamilyData.refresh(collection.patients.length,currentPatientName());FamilyData.syncStorage?.();
+ el('export-patient').disabled=readOnly||busy;FamilyData.refresh(collection.patients.length,currentPatientName(),collection.patients.map((p,i)=>({id:p.id,label:patientLabel(p,i)+(p.diary.profile.dob?' · '+dateLabel(p.diary.profile.dob):'')})),collection.activeId);FamilyData.syncStorage?.();
 }
 function renderDaily(){const d=todayDaily();const labels={well:'Ребёнок здоров; кожа, живот и стул без обострения',asthma:'Нет признаков обострения астмы / бронхообструкции',changes:'Нет новых изменений, требующих обсуждения с врачом',prepared:'Продукт, порция, время наблюдения и план помощи подготовлены'};el('daily-checks').innerHTML=Object.entries(labels).map(([k,v])=>`<label class="em-check"><input type="checkbox" data-daily="${k}" ${d[k]?'checked':''}><span>${v}</span></label>`).join('');el('daily-result').textContent=Object.keys(labels).every(k=>d[k])?'Чек-лист заполнен. Дальнейшие действия — по плану врача.':'Если пункт не выполнен или есть сомнение, отложите приём / повышение и уточните действия.';}
 function renderHome(){
@@ -96,7 +96,7 @@ function updateSymptomWarning(){
  const value=el('event-symptom').value;el('event-warning').hidden=!value;
  el('event-warning').innerHTML=value==='danger'?'<strong>Сначала помощь, потом запись.</strong> Вызывайте <a href="tel:112">112</a> / <a href="tel:103">103</a> и выполняйте индивидуальный план помощи.':'При новых симптомах отложите пробу и повышение порции, действуйте по плану помощи и свяжитесь с врачом. При ухудшении не ждите сохранения записи.';
 }
-function renderSettings(){FamilyData.refresh(collection.patients.length,currentPatientName());FamilyData.syncStorage?.();el('version').textContent=VERSION;}
+function renderSettings(){FamilyData.refresh(collection.patients.length,currentPatientName(),collection.patients.map((p,i)=>({id:p.id,label:patientLabel(p,i)+(p.diary.profile.dob?' · '+dateLabel(p.diary.profile.dob):'')})),collection.activeId);FamilyData.syncStorage?.();el('version').textContent=VERSION;}
 function paint(){renderHeader();if(view==='today')renderHome();if(view==='ladder')renderLadder();if(view==='progress')renderProgress();if(view==='diary'||view==='report')renderDiary();if(view==='report'){el('report-questions').value=data.questions||'';el('questions-status').textContent='';}if(view==='recipes')renderRecipes();if(view==='recipe')renderRecipe();if(view==='settings')renderSettings();if(view==='patients')renderPatients();access();}
 const returnPageNames={today:'Сегодня',diary:'Дневник',report:'Отчёт для врача',symptom:'Новый симптом',record:'Запись',plan:'План врача',guide:'Что важно перед началом',more:'Памятка',recipes:'Рецепты и продукты',recipe:'Рецепт',ladder:'Лестница',progress:'Наблюдение и переход',profile:'Профиль',patients:'Пациенты',settings:'Данные и установка',rules:'Порции, наблюдение и переход'};
 let backPath=[],backPatient=null;
@@ -152,9 +152,10 @@ el('add-patient').addEventListener('click',async()=>{
  if(await commitCollection(next=>addPatient(next,diary))){activatePatient();show('guide',{force:true});notice('Создан отдельный дневник: '+currentPatientName()+'. Заполните его план врача.');}
 });
 el('delete-patient').addEventListener('click',async()=>{
- if(!confirm(`Удалить пациента «${currentPatientName()}», его план и все записи? Другие пациенты останутся. Сначала сохраните резервную копию.`))return;
- const id=collection.activeId;
- if(await commitCollection(next=>removePatient(next,id))){activatePatient();notice('Профиль пациента удалён.');}
+ if(readOnly||busy)return;
+ const id=FamilyData.selectedPatient(),index=collection.patients.findIndex(p=>p.id===id);if(index<0)return;
+ if(!confirm(`Удалить пациента «${patientLabel(collection.patients[index],index)}», его план и все записи? Другие пациенты останутся. Сначала сохраните резервную копию.`))return;
+ if(await commitCollection(next=>removePatient(next,id))){activatePatient();show('settings',{force:true});notice('Дневник выбранного пациента удалён.');}
 });
 el('export').addEventListener('click',()=>{let raw;try{raw=readOnly?localStorage.getItem(KEY):JSON.stringify(collection,null,2);}catch{notice('Браузер не даёт прочитать сохранённые данные.');return;}if(!raw){notice('Сохранённых данных для копии нет.');return;}download(raw,'application/json',`em-moloko-all-patients-${localDate()}.json`);notice('Копия всех пациентов подготовлена. Убедитесь, что файл сохранился в загрузках.');});
 el('export-patient').addEventListener('click',()=>{
