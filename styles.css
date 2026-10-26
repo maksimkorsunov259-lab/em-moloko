@@ -64,3 +64,11 @@ body { margin:0; padding:0; font-family:system-ui,sans-serif; }
 #em-demo .em-diary-actions>button{flex:1 1 140px;min-width:0;font-size:15px;line-height:1.4}
 #em-demo .em-report-questions{white-space:pre-wrap;overflow-wrap:anywhere}
 @media print{#em-demo .em-nav,#em-demo .em-diary-actions{display:none!important}}
+
+/* Current product and compact checklists use the family's existing typography. */
+#em-demo .em-current-body{display:grid;grid-template-columns:minmax(0,1fr) clamp(80px,22vw,152px);gap:12px;align-items:center}
+#em-demo .em-current-copy{min-width:0;overflow-wrap:anywhere}
+#em-demo .em-current-body.em-current-no-art{grid-template-columns:1fr}
+#em-demo .em-product-art{width:100%;aspect-ratio:1;background-image:url('./assets/step-products.png');background-size:300% 200%;background-repeat:no-repeat}
+#em-demo #em-daily-checks .em-check,#em-demo #em-plan-conditions .em-check{margin:0;padding:6px 0;min-height:44px;line-height:1.5}
+#em-demo #em-daily-checks .em-check input,#em-demo #em-plan-conditions .em-check input{margin:1px 0 0}
