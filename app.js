@@ -1,7 +1,7 @@
 import {imapSteps,recipeSource} from './recipes.js';
 import {KEY,clone,initialData,localDate,emptyDaily,targets,routeBlock,hasSymptoms,evaluateProgress,validateRecordInput,validDate,pieceFractions} from './core.js';
 import {load,save,initialCollection,activeDiary,addPatient,removePatient,parseArchive,restorePauses} from './storage.js';
-const VERSION='1.2.8',BUILD='3faa3397e07b';
+const VERSION='1.2.9',BUILD='8fdadc9c99a0';
 const root=document.getElementById('em-demo'),el=id=>root.querySelector('#em-'+id),all=q=>[...root.querySelectorAll(q)];
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const unit=r=>({piece:'шт.',g:'г',ml:'мл'}[r.unit]);
@@ -137,12 +137,6 @@ async function saveQuestions(){
 }
 el('save-questions').addEventListener('click',saveQuestions);
 el('print-report').addEventListener('click',async()=>{if(!await saveQuestions())return;const title=document.title;document.title='ЕмМолоко — отчёт для врача';try{window.print();}finally{document.title=title;}});
-el('download-report').addEventListener('click',async()=>{
- if(!await saveQuestions())return;
- const style='body{font:16px/1.5 system-ui,sans-serif;color:#382d24;max-width:800px;margin:auto;padding:24px;overflow-wrap:anywhere}h3{margin-top:24px}.em-entry{border:1px solid #d8cdbf;border-radius:12px;padding:16px;margin:14px 0;break-inside:avoid}.em-row{display:flex;justify-content:space-between;gap:12px}.em-counts{display:flex;gap:24px}.em-counts span{display:block}.em-small{font-size:14px;color:#65574b}.em-voided{border-style:dashed;opacity:.7}.em-report-questions{white-space:pre-wrap}@media print{body{padding:0}@page{size:A4;margin:15mm}}';
- const html='<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src \'none\'; style-src \'unsafe-inline\'"><title>ЕмМолоко — отчёт для врача</title><style>'+style+'</style></head><body>'+el('report').innerHTML+'</body></html>';
- download(html,'text/html;charset=utf-8',`em-moloko-report-${localDate()}.html`);notice('Отчёт выбранного пациента подготовлен. Проверьте загрузки браузера.');
-});
 el('patient-select').addEventListener('change',e=>selectPatient(e.target.value));
 el('add-patient').addEventListener('click',async()=>{
  const name=el('new-patient-name').value.trim(),dob=el('new-patient-dob').value;

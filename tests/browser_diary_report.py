@@ -14,7 +14,7 @@ with sync_playwright() as pw,tempfile.TemporaryDirectory() as tmp:
  def diary():p.locator('.em-nav [data-view=diary]').click();expect(panel('diary')).to_be_visible()
  def stored():return p.evaluate("JSON.parse(localStorage.getItem('em-moloko.diary.v1'))")
  def report():panel('diary').locator('[data-view=report]').click();expect(panel('report')).to_be_visible()
- expect(panel('today')).to_be_visible();panel('today').get_by_role('button',name='Что важно перед началом',exact=True).click();expect(panel('guide')).to_be_visible();expect(p.locator('#em-guide-back')).to_have_text('← Сегодня');p.locator('#em-guide-back').click();expect(panel('today')).to_be_visible()
+ expect(panel('today')).to_be_visible();panel('today').get_by_role('button',name='Что важно перед началом молочной лестницы',exact=True).click();expect(panel('guide')).to_be_visible();expect(p.locator('#em-guide-back')).to_have_text('← Сегодня');p.locator('#em-guide-back').click();expect(panel('today')).to_be_visible()
  p.locator('#em-current-recipe').click();expect(p.locator('#em-recipe-back')).to_have_text('← Сегодня');p.locator('#em-recipe-back').click();expect(panel('today')).to_be_visible()
  diary();assert panel('diary').get_by_role('button',name='Для врача',exact=True).count()==0
  for width in [320,390,1440]:
@@ -26,13 +26,14 @@ with sync_playwright() as pw,tempfile.TemporaryDirectory() as tmp:
  a=stored()['patients'][0]['diary'];assert a['paused'];symptom=next(r for r in a['records'] if r['kind']=='symptom');assert symptom['amount']==0 and not symptom['recipeMatch'];assert len(a['records'])==4
  p.locator('[data-edit="'+symptom['id']+'"]').click();p.locator('#em-event-note').fill('Уточнённый симптом');p.locator('#em-save-event').click();expect(panel('diary')).to_be_visible()
  report();questions='Что делать дальше?\n<script>window.bad=true</script>';p.locator('#em-report-questions').fill(questions)
- with p.expect_download() as dl:p.locator('#em-download-report').click()
- file=Path(tmp)/'report.html';dl.value.save_as(file);html=file.read_text();assert questions not in html;assert '&lt;script&gt;' in html and 'Уточнённый симптом' in html and 'Исключена из подсчёта' in html;assert stored()['patients'][0]['diary']['questions']==questions
- exported=c.new_page();exported.set_content(html);assert exported.evaluate('window.bad') is None;expect(exported.locator('body')).to_contain_text('Миша');expect(exported.locator('body')).not_to_contain_text('Аня');assert exported.locator('button,input,textarea').count()==0;exported.close()
+ p.evaluate('window.print=()=>{window.printCalled=true}');p.locator('#em-print-report').click();p.wait_for_function('window.printCalled===true')
+ html=p.locator('#em-report').inner_html();assert questions not in html;assert '&lt;script&gt;' in html and 'Уточнённый симптом' in html and 'Исключена из подсчёта' in html;assert stored()['patients'][0]['diary']['questions']==questions
+ assert p.evaluate('window.bad') is None;expect(p.locator('#em-report')).to_contain_text('Миша');expect(p.locator('#em-report')).not_to_contain_text('Аня');assert p.locator('#em-download-report').count()==0
+ p.evaluate('window.printCalled=false')
  p.locator('#em-report-questions').fill('Вопрос для печати');p.evaluate('window.print=()=>window.printCalled=true');p.locator('#em-print-report').click();p.wait_for_function('window.printCalled===true');expect(p.locator('#em-report-body')).to_contain_text('Вопрос для печати')
  p.emulate_media(media='print');expect(p.locator('#em-report-questions')).to_be_hidden();expect(p.locator('#em-report')).to_be_visible();p.emulate_media(media='screen');p.screenshot(path='/tmp/moloko-report.png')
  p.locator('#em-report-questions').fill('Несохранённый вопрос');accept[0]=False;p.locator('#em-patient-select').select_option('second');expect(p.locator('#em-patient-select')).to_have_value('patient-1');expect(p.locator('#em-report-questions')).to_have_value('Несохранённый вопрос');accept[0]=True;p.locator('#em-patient-select').select_option('second');expect(panel('today')).to_be_visible()
  diary();expect(panel('diary').locator('[data-view=record]')).to_be_disabled();panel('diary').locator('[data-view=symptom]').click();p.locator('#em-event-symptom').select_option('gut');p.locator('#em-save-event').click();expect(panel('diary')).to_be_visible();report();expect(p.locator('#em-report-questions')).to_have_value('');assert len(stored()['patients'][1]['diary']['records'])==1
  p.locator('#em-patient-select').select_option('patient-1');expect(panel('today')).to_be_visible();diary();report();expect(p.locator('#em-report-questions')).to_have_value('Вопрос для печати');assert len(stored()['patients'][0]['diary']['records'])==4
  p.evaluate('navigator.serviceWorker.ready');p.reload();expect(panel('today')).to_be_visible();c.set_offline(True);p.reload();expect(panel('today')).to_be_visible();diary();report();expect(p.locator('#em-report-log')).to_contain_text('Уточнённый симптом');expect(p.locator('#em-report-questions')).to_have_value('Вопрос для печати');assert not errors,errors;c.close()
-print('PASS: diary actions, intake/skip/edit/void, standalone symptoms and blocked-plan access, help draft preservation, contextual returns, report download/print/questions, escaping, patient isolation, cancellation and offline.')
+print('PASS: diary actions, intake/skip/edit/void, standalone symptoms and blocked-plan access, help draft preservation, contextual returns, report PDF/print/questions, escaping, patient isolation, cancellation and offline.')
