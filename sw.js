@@ -1,6 +1,6 @@
 const PREFIX='em-moloko:'+new URL('./',self.location).pathname+':';
-const CACHE=PREFIX+'25650718c95c';
-const FILES=["./index.html","./styles.css","./app.js","./core.js","./storage.js","./recipes.js","./manifest.webmanifest","./assets/icon-192.png","./assets/icon-512.png","./assets/icon-180.png","./assets/author.png","./assets/taplink-qr.png","./family-ui.css","./family-about.js","./family-data.js","./update-check.js","./assets/step-products.png"];
+const CACHE=PREFIX+'b5a3b8995473';
+const FILES=["./app-qr.svg","./index.html","./styles.css","./app.js","./core.js","./storage.js","./recipes.js","./manifest.webmanifest","./assets/icon-192.png","./assets/icon-512.png","./assets/icon-180.png","./assets/author.png","./assets/taplink-qr.png","./family-ui.css","./family-about.js","./family-data.js","./update-check.js","./assets/step-products.png"];
 self.addEventListener('install',event=>event.waitUntil((async()=>{const cache=await caches.open(CACHE);await cache.addAll(FILES.map(file=>new Request(new URL(file,self.location),{cache:'reload'})));})()));
 self.addEventListener('activate',event=>event.waitUntil((async()=>{const keys=await caches.keys();await Promise.all(keys.filter(k=>k.startsWith(PREFIX)&&k!==CACHE).map(k=>caches.delete(k)));await self.clients.claim();})()));
 self.addEventListener('message',event=>{if(event.data?.type==='ACTIVATE')self.skipWaiting();});
